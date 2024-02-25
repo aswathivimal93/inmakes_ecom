@@ -7,6 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 def _cart_id(request):
+    #if request.user.is_authenticated:
+
     cart=request.session.session_key
     if not cart:
         cart=request.session.create()
