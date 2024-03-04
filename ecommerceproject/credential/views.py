@@ -1,6 +1,10 @@
 from django.contrib import messages, auth
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from cart.models import Cart,CartUserMapping,CartItem
+from cart.views import _cart_id
+
+
 
 
 # Create your views here.
@@ -39,6 +43,25 @@ def login(request):
         password=request.POST['password']
         user=auth.authenticate(username=username,password=password)
         if user is not None:
+            #if cart exist
+            try:
+                cart = Cart.objects.get(cart_id=_cart_id(request))
+                print("cart exist")
+                if not CartUserMapping.objects.filter(user=user).exists():
+                    CartUserMapping.objects.create(cart=cart, user=user)
+                else:
+                    usercart=CartUserMapping.objects.get(user=user).cart
+                    CartItem.objects.filter(cart=cart).update(cart=usercart)
+                       # f.update(cart=usercart)
+                       # f.save()
+                    cart.delete()
+
+                print(cart.id)
+            except Cart.DoesNotExist:
+                print("no cart")
+           # if cart:
+           #    if not CartUserMapping.objects.filter(cart=cart, user=user).exists():
+           #         CartUserMapping.objects.create(cart=cart, user=user)
             auth.login(request,user)
             print("login")
             return redirect('/')

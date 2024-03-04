@@ -27,6 +27,7 @@
           </a>
         {% if user.is_authenticated%}
         <ul class="dropdown-menu">
+           <li>{{user_name}}</li>
            <li><a class="dropdown-item" aria-current="page" href="{% url 'credential:logout' %}">Logout</a></li>
         </ul>
 <!--         <li class="nav-item">-->

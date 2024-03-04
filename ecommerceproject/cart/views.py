@@ -1,26 +1,61 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from .models import Cart,CartItem
+from .models import Cart,CartItem,CartUserMapping
 from shop.models import Product
+
 from django.core.exceptions import ObjectDoesNotExist
 
 
 def _cart_id(request):
-    #if request.user.is_authenticated:
+    if request.user.is_authenticated:
+        user_id=request.user.id
+        if CartUserMapping.objects.filter(user=user_id):
+            cart=CartUserMapping.objects.get(user=user_id).cart
+        else:
+            cart = request.session.session_key
+            #CartUserMapping.objects.create(cart=cart,user=request.user)
+            if not cart:
+                cart = request.session.create()
+            print(cart)
+            #CartUserMapping.objects.create(cart=cart,user=request.user_id)
+        #try:
+         #   cartuser=CartUserMapping.objects.get(user=user_id)
+         #   cart = cartuser.cart
 
-    cart=request.session.session_key
-    if not cart:
-        cart=request.session.create()
+
+       # except ObjectDoesNotExist:
+           # cart = request.session.session_key
+            #print(cart)
+            #if cart:
+             #   if not CartUserMapping.objects.filter(cart=cart, user=request.user).exists():
+            #        CartUserMapping.objects.create(cart=cart, user=request.user)
+            #if cart:
+                #cartuser=CartUserMapping.objects.create(cart=cart,user=user_id)
+            #else:
+           # if not cart:
+           #     cart = request.session.create()
+                #cartuser = CartUserMapping.objects.create(cart=cart, user=user_id)
+    else:
+        cart=request.session.session_key
+        if not cart:
+            cart=request.session.create()
     return cart
 def add_cart(request,product_id):
     product=Product.objects.get(id=product_id)
 
     try:
         cart=Cart.objects.get(cart_id=_cart_id(request))
+        print("cart exist")
+        print(cart.id)
     except Cart.DoesNotExist:
         cart=Cart.objects.create(cart_id=_cart_id(request))
         cart.save()
+        print("does not exist")
+        if request.user.is_authenticated:
+            user= request.user
+            if not CartUserMapping.objects.filter(cart=cart,user=user).exists():
+                CartUserMapping.objects.create(cart=cart,user=user)
     try:
         cart_item=CartItem.objects.get(product=product,cart=cart)
         if cart_item.quantity<cart_item.product.stock:
